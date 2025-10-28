@@ -6,6 +6,7 @@ import { MovieTile } from './components/MovieTile/MovieTile'
 import type { TMovieResponse } from './types/tbmdTypes'
 import { Spinner } from "flowbite-react";
 import { useDebounce } from 'react-use'
+import { updateSearchCount } from './utils/appwrite'
 
 function App(): React.JSX.Element {
   const [errorMessage, setErrorMessage] = useState('')
@@ -24,6 +25,9 @@ function App(): React.JSX.Element {
     try {
       const response = query ? await axios.get(`${import.meta.env.VITE_BASE_URL}search/movie?query=${encodeURIComponent(query)}`, { params: params, headers: headers }) :  await axios.get(`${import.meta.env.VITE_BASE_URL}discover/movie?sort_by=popularity.desc`, { params: params, headers: headers })
       setPopularMovies(response.data.results ?? [])
+      if (query && response.data.results) {
+        await updateSearchCount(query, response.data.results[0])
+      }
     } catch (error) {
       console.error(error)
       setErrorMessage("Error fetching movies. Try again later")
