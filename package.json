@@ -15,6 +15,7 @@
     "flowbite-react": "^0.12.9",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-use": "^17.6.0",
     "tailwindcss": "^4.1.15"
   },
   "devDependencies": {

@@ -3,14 +3,18 @@ import './App.css'
 import Search from './components/Search/Search'
 import axios from 'axios'
 import { MovieTile } from './components/MovieTile/MovieTile'
-import type { TMOvieResponse } from './types/tbmdTypes'
+import type { TMovieResponse } from './types/tbmdTypes'
 import { Spinner } from "flowbite-react";
+import { useDebounce } from 'react-use'
 
 function App(): React.JSX.Element {
   const [errorMessage, setErrorMessage] = useState('')
-  const [popularMovies, setPopularMovies] = useState<TMOvieResponse[] | undefined>(undefined)
+  const [popularMovies, setPopularMovies] = useState<TMovieResponse[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+
+  useDebounce(() => setDebouncedSearch(searchTerm), 500, [searchTerm])
 
   const params = { api_key: import.meta.env.VITE_TBMD_API_KEY }
   const headers = { 'Authorization': `Bearer ${import.meta.env.VITE_TMMD_READ_ACCESS_TOKEN}` }
@@ -29,8 +33,8 @@ function App(): React.JSX.Element {
   }
 
   useEffect(() => {
-    fetchMovies(searchTerm)
-  }, [searchTerm])
+    fetchMovies(debouncedSearch)
+  }, [debouncedSearch])
 
   return (
     <main>
@@ -47,7 +51,7 @@ function App(): React.JSX.Element {
             {errorMessage}
           </p> : (
             <ul>
-              {popularMovies?.map((item: TMOvieResponse) => (
+              {popularMovies?.map((item: TMovieResponse) => (
                 <MovieTile key={item.id} title={item.title} description={item.overview} poster={item.poster_path} vote={item.vote_average} year={item.release_date.split("-")[0]} />
               ))}
             </ul>
