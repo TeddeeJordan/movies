@@ -7,8 +7,7 @@ const database = new TablesDB(client)
 
 export const updateSearchCount = async (searchTerm: string, movie: TMovieResponse) => {
     try {
-        const result = await database.listRows(import.meta.env.VITE_APPWRITE_DATABASE_ID, import.meta.env.VITE_TABLE_NAME, [Query.equal(searchTerm, searchTerm)])
-        
+        const result = await database.listRows(import.meta.env.VITE_APPWRITE_DATABASE_ID, import.meta.env.VITE_TABLE_NAME, [Query.equal("searchTerm", searchTerm)])
         if (result.rows.length > 0) {
             const doc = result.rows[0]
             await database.updateRow(import.meta.env.VITE_APPWRITE_DATABASE_ID, import.meta.env.VITE_TABLE_NAME, doc.$id, { count: doc.count + 1 })
