@@ -1,4 +1,4 @@
-export type TMOvieResponse = {
+export type TMovieResponse = {
     id: number
     title: string
     overview: string
