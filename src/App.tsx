@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react'
 import './App.css'
 import Search from './components/Search/Search'
@@ -6,11 +7,17 @@ import { MovieTile } from './components/MovieTile/MovieTile'
 import type { TMovieResponse } from './types/tbmdTypes'
 import { Spinner } from "flowbite-react";
 import { useDebounce } from 'react-use'
+import { getTrendingMovies, updateSearchCount } from './utils/appwrite'
+import type { TTrendingMovie } from './types/appwriteType'
+import { TrendingTile } from './components/TrendingTile/TrendingTile'
 
 function App(): React.JSX.Element {
   const [errorMessage, setErrorMessage] = useState('')
+  const [errorMessageTrending, setErrorMessageTrending] = useState('')
   const [popularMovies, setPopularMovies] = useState<TMovieResponse[] | undefined>(undefined)
+  const [trendingMovies, setTrendingMovies] = useState<TTrendingMovie[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingTrending, setIsLoadingTrending] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
@@ -22,8 +29,11 @@ function App(): React.JSX.Element {
   const fetchMovies = async (query: string = '') => {
     setIsLoading(true)
     try {
-      const response = query ? await axios.get(`${import.meta.env.VITE_BASE_URL}search/movie?query=${encodeURIComponent(query)}`, { params: params, headers: headers }) :  await axios.get(`${import.meta.env.VITE_BASE_URL}discover/movie?sort_by=popularity.desc`, { params: params, headers: headers })
+      const response = query ? await axios.get(`${import.meta.env.VITE_BASE_URL}search/movie?query=${encodeURIComponent(query)}`, { params: params, headers: headers }) : await axios.get(`${import.meta.env.VITE_BASE_URL}discover/movie?sort_by=popularity.desc`, { params: params, headers: headers })
       setPopularMovies(response.data.results ?? [])
+      if (query && response.data.results) {
+        await updateSearchCount(query, response.data.results[0])
+      }
     } catch (error) {
       console.error(error)
       setErrorMessage("Error fetching movies. Try again later")
@@ -32,9 +42,27 @@ function App(): React.JSX.Element {
     }
   }
 
+  const loadTrendingMovies = async () => {
+    setIsLoadingTrending(true)
+    try {
+      const result = await getTrendingMovies()
+      setTrendingMovies(result)
+      console.log(result)
+    } catch (error) {
+      console.error(error)
+      setErrorMessageTrending("Error fetching trending movies. Try again later")
+    } finally {
+      setIsLoadingTrending(false)
+    }
+  }
+
   useEffect(() => {
-    fetchMovies(debouncedSearch)
+    void fetchMovies(debouncedSearch)
   }, [debouncedSearch])
+
+  useEffect(() => {
+    void loadTrendingMovies()
+  }, [])
 
   return (
     <main>
@@ -45,6 +73,18 @@ function App(): React.JSX.Element {
           <h1>Find <span className='text-gradient'>Movies</span> You'll Enjoy Without The Hassle</h1>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
+
+        {isLoadingTrending ? <Spinner /> : errorMessageTrending ? <p className='text-red-500'>
+          {errorMessageTrending}
+        </p> : (
+          <section className='trending'>
+            <ul>
+              {trendingMovies?.map((item: TTrendingMovie, index) => (
+                <TrendingTile key={item.movieID} poster={item.poster} rank={index + 1} />
+              ))}
+            </ul>
+          </section>
+        )}
         <section className='all-movies'>
           <h2 className='mt-[20px]'>All Movies</h2>
           {isLoading ? <Spinner /> : errorMessage ? <p className='text-red-500'>
