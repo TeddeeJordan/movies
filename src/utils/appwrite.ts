@@ -1,5 +1,6 @@
 import { Client, ID, Query, TablesDB } from "appwrite"
 import type { TMovieResponse } from "../types/tbmdTypes"
+import type { TTrendingMovie } from "../types/appwriteType"
 
 const client = new Client().setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT).setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
 
@@ -19,6 +20,19 @@ export const updateSearchCount = async (searchTerm: string, movie: TMovieRespons
                 poster: `${import.meta.env.VITE_IMAGE_URL}/w500${movie.poster_path}`
             })
         }
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const getTrendingMovies = async () => {
+    try {
+        const result = await database.listRows(import.meta.env.VITE_APPWRITE_DATABASE_ID, import.meta.env.VITE_TABLE_NAME, [
+            Query.limit(5),
+            Query.orderDesc("count")
+        ])
+        console.log(result.rows)
+        return result.rows as unknown as TTrendingMovie[]
     } catch (error) {
         console.error(error)
     }
